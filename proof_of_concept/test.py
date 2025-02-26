@@ -6,9 +6,9 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torchvision.models import resnet50, ResNet50_Weights
-from main import PokemonClassifier
+from PokemonClassifier import PokemonClassifier
 from PIL import Image
-from CustomImageFolder import load_json_as_dict
+from PokeData import load_json_as_dict
 import timm
 
 import matplotlib.pyplot as plt

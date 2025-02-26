@@ -1,11 +1,12 @@
 import argparse
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import torch.optim as optim
 import torchvision.transforms as transforms
-from CustomImageFolder import CustomImageFolder
-import timm
+
+from PokeData import PokeData
+from PokemonClassifier import PokemonClassifier
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,42 +14,6 @@ import numpy as np
 
 import os
 import stat
-
-class PokeData(Dataset):
-    def __init__(self, data_dir, transform=None):
-        self.data = CustomImageFolder(data_dir, transform=transform)
-    
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-    def __len__(self):
-        return len(self.data)
-
-    @property
-    def classes(self):
-        return self.data.classes
-    
-    @property
-    def classIds(self):
-        target_to_class = {v: k for k, v in self.data.class_to_idx.items()}
-        return target_to_class
-    
-class PokemonClassifier(nn.Module):
-    def __init__(self, num_classes=149):
-        super(PokemonClassifier, self).__init__()
-        # Define base model
-        self.base_model = timm.create_model('efficientnet_b0', pretrained=True)
-        self.features = nn.Sequential(*list(self.base_model.children())[:-1])
-        eneT_out_size = 1280
-
-        # Make classifier
-        self.classifier = nn.Linear(eneT_out_size, num_classes)
-        
-
-    def forward(self, x):
-        x = self.features(x)
-        output = self.classifier(x)
-        return output
 
 def train(model, device, train_dataloader, val_dataloader, criterion, optimizer, num_epoch):
     # Loss function
