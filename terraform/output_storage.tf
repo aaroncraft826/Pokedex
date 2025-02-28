@@ -1,4 +1,9 @@
-resource "aws_s3_bucket" "poke_bucket" {
+import {
+  to = aws_s3_bucket.output_bucket
+  id = ""
+}
+
+resource "aws_s3_bucket" "output_bucket" {
   bucket = "aaron-poke-output-bucket"
 
   tags = {

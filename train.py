@@ -1,12 +1,20 @@
 import argparse
+import boto3.utils
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torchvision.transforms as transforms
 
+import torch.multiprocessing as mp
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed import init_process_group, destroy_process_group
+
 from PokeData import PokeData
 from PokemonClassifier import PokemonClassifier
+from Transform import PokeTransform
+import constants
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,6 +24,10 @@ import boto3
 
 import os
 import stat
+
+from s3torchconnector import S3MapDataset, S3Checkpoint
+import torch.distributed.checkpoint as DCP
+from s3torchconnector.dcp import S3StorageWriter
 
 def train(model, device, train_dataloader, val_dataloader, criterion, optimizer, num_epoch):
     # Loss function
@@ -50,44 +62,52 @@ def train(model, device, train_dataloader, val_dataloader, criterion, optimizer,
         print(f"Training Progress: Epoch {epoch} - Train loss: {train_loss} - Validation loss: {val_loss}")
 
 def model_to_s3(model):
+    model_name = 'test-model.pth'
+    CHECKPOINT_URI = constants.OUTPUT_BUCKET + '/' + model_name
     # Conenct to client
-    s3 = boto3.client(
-        's3',
-        endpoint_url = os.environ['S3_ENDPOINT_URL'], # Set as environment variable
-        aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID'], # Set as environment variable
-        aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY'] # Set as environment variable
+    s3_storage_writer = S3StorageWriter(region=constants.REGION, path=CHECKPOINT_URI)
+    DCP.save(
+        state_dict=model.state_dict(),
+        storage_writer=s3_storage_writer,
     )
-    bucket_name = "your-bucket-name"
-    object_name = "models/model.pth"
-    model_path = "model.pth"
-    
-    # Save model
-    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {CHECKPOINT_URI}")
 
-    # Upload model to s3
-    s3.upload_file(model_path, bucket_name, object_name)
-
-    os.remove(model_path)
-
-    print(f"Model saved to s3://{bucket_name}/{object_name}")
-
-def main():
+def get_data():
     # Create Dataset
+
     transform = transforms.Compose([
-        transforms.Resize((256, 256)),
+        transforms.Grayscale(num_output_channels=3),
         transforms.ToTensor(),
     ])
 
-    data_dir = '/mnt/c/Users/agice/Desktop/Side_Projects/Pokedex_Data/dataset'
-    full_dataset = PokeData(data_dir, transform)
-    
-    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(full_dataset, [0.8, 0.2, 0.0])
+    DATASET_URI= constants.TRAIN_BUCKET # "s3://<BUCKET>/<PREFIX>"
+    full_dataset = S3MapDataset.from_prefix(DATASET_URI, region=constants.REGION, transform=PokeTransform(transform))
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [0.8, 0.2])
 
+    # dist.init_process_group("nccl")
+    # rank = dist.get_rank()
+    # dist.get_world_size()
+    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # sampler = DistributedSampler(train_dataset)
     train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    
+    # sampler = DistributedSampler(val_dataset)
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    
+    print(f"Training Dataset Size: {len(train_dataset)}")
+    print(f"Validation Dataset Size: {len(val_dataset)}")
+    
     for images, labels in train_dataloader:
+        # print(images)
+        # print(labels)
         break
+
+    return train_dataloader, val_dataloader, images, labels
+
+def main():
+    # Create and load data
+    train_dataloader, val_dataloader, images, labels = get_data()
 
     # Create model
     model = PokemonClassifier(num_classes=149)
@@ -112,8 +132,10 @@ def main():
         num_epoch=5
     )
 
+    path = '/mnt/c/Users/agice/Desktop/Side_Projects/Pokedex_Data/test-model.pth'
+    torch.save(model.state_dict(), path)
     # Save model to S3
-    model_to_s3(model=model)
+    # model_to_s3(model=model)
 
 if __name__ == '__main__':
     main()

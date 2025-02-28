@@ -21,4 +21,6 @@ resource "aws_instance" "training_server" {
     tags = {
         Name = "pokedex-training-server-${count.index}"
     }
+
+    depends_on = [ aws_s3_bucket.output_bucket, aws_s3_bucket.train_bucket, aws_ecr_repository.poke_ecr ]
 }

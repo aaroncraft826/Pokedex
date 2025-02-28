@@ -4,4 +4,8 @@ timm
 matplotlib
 numpy
 pandas
-ray
+kubectl
+boto3
+jq
+s3torchconnector
+tenacity

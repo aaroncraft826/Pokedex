@@ -15,10 +15,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+from s3torchconnector.dcp import S3StorageReader
+import constants
+import torch.distributed.checkpoint as DCP
+
 def test():
-    path = '/mnt/c/Users/agice/Desktop/Side_Projects/Pokedex_Data/test-model.pth'
+    MODEL_URI = constants.OUTPUT_BUCKET + '/' + 'test-model-.pth' + '/'
     model = PokemonClassifier()
-    model.load_state_dict(torch.load(path, weights_only=True))
+    model_state_dict = model.state_dict()
+    s3_storage_reader = S3StorageReader(region=constants.REGION, path=MODEL_URI)
+    DCP.load(
+        state_dict=model_state_dict,
+        storage_reader=s3_storage_reader
+    )
+    model.load_state_dict(model_state_dict)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # model.to(device)
     model.eval()
