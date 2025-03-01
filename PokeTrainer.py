@@ -94,10 +94,10 @@ class PokeTrainer:
         # Create model/snapshot URI
         model_name = ""
         if is_snapshot:
-            model_name = f'test-snapshot-{self.global_rank}.pth'
+            model_name = f'test-snapshot-{self.local_rank}.pth'
         else:
             print(f"GPU[{self.global_rank}] - Saving Model")
-            model_name = f'test-model-{model_name}.pth'
+            model_name = f'test-model-{self.global_rank}.pth'
         CHECKPOINT_URI = constants.OUTPUT_BUCKET + '/' + model_name
 
         # Conenct to client

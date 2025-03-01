@@ -27,7 +27,7 @@ class PokeTransform:
             image_pil = Image.open(BytesIO(content))
         except UnidentifiedImageError:
             print(f"IMAGE FAILURE ON OBJECT {object.key}")
-            # return (torch.empty((3, 256, 256), dtype=torch.int64), 0)
+            return (torch.empty((3, 256, 256), dtype=torch.int64), 0)
         image_tensor = self.transform(image_pil)
         mon_to_idx = load_json_as_dict('class_indexes.json')
         label = mon_to_idx[object.key.split('/')[0]]
