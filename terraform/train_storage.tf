@@ -1,8 +1,3 @@
-import {
-  to = aws_s3_bucket.train_bucket
-  id = ""
-}
-
 resource "aws_s3_bucket" "train_bucket" {
   bucket = "aaron-poke-training-bucket"
 

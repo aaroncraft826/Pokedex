@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: poke-trainer-ds
+spec:
+  selector:
+    matchLabels:
+      name: poke-trainer-ds
+  template:
+    metadata:
+      labels:
+        name: poke-trainer-ds
+    spec:
+      containers:
+      - name: poke-trainer
+        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        resources:
+          limits:
+            nvidia.com/gpu: 4
+      terminationGracePeriodSeconds: 60

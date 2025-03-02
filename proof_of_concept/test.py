@@ -12,8 +12,6 @@ from PokeData import load_json_as_dict
 import timm
 
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 def test():
     path = '/mnt/c/Users/agice/Desktop/Side_Projects/Pokedex_Data/test-model.pth'

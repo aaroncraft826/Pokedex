@@ -9,11 +9,8 @@ from torchvision.models import resnet50, ResNet50_Weights
 from PokemonClassifier import PokemonClassifier
 from PIL import Image
 from PokeData import load_json_as_dict
-import timm
 
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 from s3torchconnector.dcp import S3StorageReader
 import constants

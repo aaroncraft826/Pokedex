@@ -1,5 +1,3 @@
-import argparse
-import boto3.utils
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -14,8 +12,6 @@ from torch.distributed import init_process_group, destroy_process_group
 from PokemonClassifier import PokemonClassifier
 from Transform import PokeTransform
 import constants
-
-import boto3
 
 import os
 import sys

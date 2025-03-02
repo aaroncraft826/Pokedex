@@ -1,11 +1,6 @@
 torch
 torchvision
 timm
-matplotlib
-numpy
-pandas
-kubectl
 boto3
 jq
 s3torchconnector
-tenacity

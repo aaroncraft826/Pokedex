@@ -9,8 +9,6 @@ from PokeData import PokeData
 from PokemonClassifier import PokemonClassifier
 
 import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 import os
 import stat
