@@ -5,10 +5,10 @@ docker-build:
 	docker build -f Dockerfile --no-cache -t aaron-poke-ecr .
 	
 docker-tag:
-	docker tag aaron-poke-ecr:latest 721916640514.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
+	docker tag aaron-poke-ecr:latest <account-name>.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
 
 docker-push:
-	docker push 721916640514.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
+	docker push <account-name>.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
 
 deploy: 
 	kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.10/nvidia-device-plugin.yml
