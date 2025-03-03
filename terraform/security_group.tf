@@ -1,6 +1,6 @@
 resource "aws_security_group" "poke_sg" {
   name   = "SSH + Port 3005 for API"
-  vpc_id = aws_vpc.poke_vpc.id
+  vpc_id = module.vpc.vpc_id
  
   ingress {
     cidr_blocks = [

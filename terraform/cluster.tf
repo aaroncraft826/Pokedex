@@ -2,19 +2,20 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.31"
 
-  cluster_name    = "poke-cluster"
-  cluster_version = "1.31"
+  cluster_name    = var.cluster_name
+  cluster_version = "1.32"
 
   iam_role_arn = aws_iam_role.cluster.arn
 
-  # Optional
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
-  # Optional: Adds the current caller identity as an administrator via cluster access entry
   enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     poke_node_group = {
+        ami_type = "AL2_x86_64_GPU"
         instance_types = ["g5.xlarge"]
         min_size = 2
         max_size = 2
@@ -22,13 +23,11 @@ module "eks" {
     }
   }
 
-  vpc_id     = aws_vpc.poke_vpc.id
-  subnet_ids = [aws_subnet.public_subnet_1.id, aws_subnet.private_subnet_1.id, aws_subnet.public_subnet_2.id, aws_subnet.private_subnet_2.id]
-
   tags = {
     Environment = "dev"
     Terraform   = "true"
   }
+  depends_on = [module.vpc]
 }
 
 resource "aws_iam_role" "cluster" {
@@ -52,5 +51,10 @@ resource "aws_iam_role" "cluster" {
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.cluster.name
+}
+
+resource "aws_iam_role_policy_attachment" "cluster_AmazonS3FullAccess" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
   role       = aws_iam_role.cluster.name
 }
