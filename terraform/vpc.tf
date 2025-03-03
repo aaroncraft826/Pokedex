@@ -102,6 +102,22 @@ module "vpc" {
   single_nat_gateway   = true
   enable_dns_hostnames = true
 
+  default_security_group_ingress = {
+    cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+    from_port   = 0
+    to_port     = 65535
+    protocol  = "tcp"
+  }
+  
+  default_security_group_egress = {
+    from_port   = 0
+    to_port     = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                      = 1

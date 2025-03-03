@@ -8,13 +8,25 @@ from torchvision.datasets import ImageFolder
 from torchvision.models import resnet50, ResNet50_Weights
 from PokemonClassifier import PokemonClassifier
 from PIL import Image
-from PokeData import load_json_as_dict
 
 import matplotlib.pyplot as plt
+import json
 
 from s3torchconnector.dcp import S3StorageReader
-import constants
+import constants as constants
 import torch.distributed.checkpoint as DCP
+
+def load_json_as_dict(file_path):
+    try:
+        with open('poke_indexes.json', 'r') as file:
+            data = json.load(file)
+            return data
+    except FileNotFoundError:
+        print(f"Error: File not found at '{file_path}'")
+        return None
+    except json.JSONDecodeError:
+        print(f"Error: Invalid JSON format in '{file_path}'")
+        return None
 
 def test():
     MODEL_URI = constants.OUTPUT_BUCKET + '/' + 'test-model-.pth' + '/'

@@ -11,10 +11,15 @@ spec:
       labels:
         name: poke-trainer-ds
     spec:
+      hostNetwork: true
       containers:
       - name: poke-trainer
-        image: quay.io/fluentd_elasticsearch/fluentd:v2.5.2
+        image: <accnt name>.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
+        ports:
+        - containerPort: 12345
+          hostPort: 12345
+          protocol: TCP
         resources:
           limits:
-            nvidia.com/gpu: 4
+            nvidia.com/gpu: 1
       terminationGracePeriodSeconds: 60
