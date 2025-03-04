@@ -14,7 +14,14 @@ spec:
       hostNetwork: true
       containers:
       - name: poke-trainer
-        image: <accnt name>.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
+        image: <acc>.dkr.ecr.us-east-1.amazonaws.com/aaron-poke-ecr:latest
+        env:
+        - name: NCCL_SOCKET_IFNAME
+          value: "eth0"
+        # - name: MASTER_ADDR
+        #   value: "10.0.1.243"
+        # - name: MASTER_PORT
+        #   value: "12345"
         ports:
         - containerPort: 12345
           hostPort: 12345

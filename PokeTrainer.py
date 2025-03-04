@@ -60,6 +60,10 @@ class PokeTrainer:
 
         for epoch in range(num_epoch):
             # Set model to train
+            train_cor = 0
+            val_cor = 0
+            train_size = 0
+            val_size = 0
             self.model.train()
             running_loss = 0.0
             for images, labels in self.train_data:
@@ -70,6 +74,11 @@ class PokeTrainer:
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.item() * images.size(0)
+
+                _, predicted = torch.max(outputs, 1)
+                train_cor += (predicted == labels).sum().item()
+                train_size += labels.size(0)
+            train_acc = train_cor / train_size
             train_loss = running_loss / len(self.train_data.dataset)
             train_losses.append(train_loss)
 
@@ -81,19 +90,18 @@ class PokeTrainer:
                     outputs = self.model(images)
                     loss = criterion(outputs, labels)
                     running_loss += loss.item() * images.size(0)
+                    val_cor += (predicted == labels).sum().item()
+                    val_size += labels.size(0)
+            val_acc = val_cor / val_size
             val_loss = running_loss / len(self.val_data.dataset)
             val_losses.append(val_loss)
 
             print(f"GPU[{self.global_rank}] - Training Progress: Epoch {epoch} - Train loss: {train_loss} - Validation loss: {val_loss}")
+            print(f"GPU[{self.global_rank}] - Training Progress: Epoch {epoch} - Train accuracy: {train_acc} - Validation accuracy: {val_acc}")
 
     def model_to_s3(self, is_snapshot: bool = False):
         # Create model/snapshot URI
-        model_name = ""
-        if is_snapshot:
-            model_name = f'test-snapshot-{self.local_rank}.pth'
-        else:
-            print(f"GPU[{self.global_rank}] - Saving Model")
-            model_name = f'test-model-{self.global_rank}.pth'
+        model_name = 'test-model'
         CHECKPOINT_URI = constants.OUTPUT_BUCKET + '/' + model_name
 
         # Conenct to client
@@ -124,9 +132,11 @@ def load_train_objs():
 
     DATASET_URI= constants.TRAIN_BUCKET # "s3://<BUCKET>/<PREFIX>"
     full_dataset = S3MapDataset.from_prefix(DATASET_URI, region=constants.REGION, transform=PokeTransform(transform))
-    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [0.8, 0.2])
-    train_dataloader = DataLoader(train_dataset, batch_size=32, sampler=DistributedSampler(train_dataset))
-    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    gen = torch.Generator()
+    gen.manual_seed(0)
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [0.8, 0.2], gen)
+    train_dataloader = DataLoader(train_dataset, batch_size=64, sampler=DistributedSampler(train_dataset))
+    val_dataloader = DataLoader(val_dataset, batch_size=64, sampler=DistributedSampler(val_dataset))
     
     print(f"Training Dataset Size: {len(train_dataset)}")
     print(f"Validation Dataset Size: {len(val_dataset)}")

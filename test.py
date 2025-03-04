@@ -8,6 +8,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.models import resnet50, ResNet50_Weights
 from PokemonClassifier import PokemonClassifier
 from PIL import Image
+from torch.distributed import init_process_group, destroy_process_group
 
 import matplotlib.pyplot as plt
 import json
@@ -15,6 +16,8 @@ import json
 from s3torchconnector.dcp import S3StorageReader
 import constants as constants
 import torch.distributed.checkpoint as DCP
+
+import os
 
 def load_json_as_dict(file_path):
     try:
@@ -29,8 +32,11 @@ def load_json_as_dict(file_path):
         return None
 
 def test():
-    MODEL_URI = constants.OUTPUT_BUCKET + '/' + 'test-model-.pth' + '/'
-    model = PokemonClassifier()
+    # os.environ["MASTER_ADDR"] = "localhost"
+    # os.environ["MASTER_PORT"] = 12345
+    # init_process_group("nccl", rank=0, world_size=1)
+    MODEL_URI = constants.OUTPUT_BUCKET + '/' + 'test-model'
+    model = PokemonClassifier(num_classes=149)
     model_state_dict = model.state_dict()
     s3_storage_reader = S3StorageReader(region=constants.REGION, path=MODEL_URI)
     DCP.load(

@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 EXPOSE 12345
+
 RUN chmod +x run.sh
 ENTRYPOINT ["/bin/bash", "-c", "./run.sh"]
 # ENTRYPOINT [ "torchrun" ]

@@ -4,3 +4,4 @@ timm
 boto3
 jq
 s3torchconnector
+tenacity
